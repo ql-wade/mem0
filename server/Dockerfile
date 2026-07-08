@@ -4,7 +4,9 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+# PAV2 patch: psycopg-binary（python:3.12-slim 缺 libpq → no pq wrapper）+ tsinghua pip 加速
+RUN pip install --no-cache-dir psycopg-binary>=3.2.8 && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
