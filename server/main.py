@@ -127,6 +127,11 @@ DEFAULT_CONFIG = {
             "user": POSTGRES_USER,
             "password": POSTGRES_PASSWORD,
             "collection_name": POSTGRES_COLLECTION_NAME,
+            # ARK Coding Plan 等非 OpenAI 默认 embedder：维度 ≠ 1536，HNSW > 2000 维会
+            # 失败。从 env 读 dim 和 HNSW 开关，PAV2 默认 false（ARK doubao-embedding-vision
+            # 是 2048 维，超 HNSW 2000 上限）。
+            "embedding_model_dims": int(os.environ.get("MEM0_EMBEDDING_DIMS", "1536")),
+            "hnsw": os.environ.get("MEM0_USE_HNSW", "true").lower() == "true",
         },
     },
     "llm": {
