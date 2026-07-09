@@ -905,13 +905,28 @@ class Memory(MemoryBase):
         )
 
         try:
-            response = self.llm.generate_response(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                response_format={"type": "json_object"},
-            )
+            try:
+                response = self.llm.generate_response(
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    response_format={"type": "json_object"},
+                )
+            except Exception as re_fmt_err:
+                # Some upstream models (e.g. ARK Coding Plan doubao/minimax) reject
+                # response_format=json_object. Retry without it; the JSON is still
+                # parsed below via the extract_json fallback in the except block.
+                msg_lower = str(re_fmt_err).lower()
+                if "response_format" not in msg_lower and "json_object" not in msg_lower:
+                    raise
+                logger.warning("Retrying LLM extraction without response_format: %s", re_fmt_err)
+                response = self.llm.generate_response(
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                )
         except Exception as e:
             # Re-raise so callers can implement provider fallback / retry.
             # The original silent ``return []`` made upstream callers unable to
